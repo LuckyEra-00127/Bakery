@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package bakery.sales;
+
+option go_package = "github.com/bakeplan/bakeplan-go/gen/salespb";
+
+service BakerySalesService {
+  rpc CreateProduct(CreateProductRequest) returns (ProductResponse);
+  rpc UpdateProduct(UpdateProductRequest) returns (ProductResponse);
+  rpc DeleteProduct(DeleteProductRequest) returns (StatusResponse);
+  rpc GetProductById(GetProductByIDRequest) returns (ProductResponse);
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+  rpc CreateBakePlan(CreateBakePlanRequest) returns (BakePlanResponse);
+  rpc UpdateBakePlan(UpdateBakePlanRequest) returns (BakePlanResponse);
+  rpc DeleteBakePlan(DeleteBakePlanRequest) returns (StatusResponse);
+  rpc ListBakePlansByDate(ListBakePlansByDateRequest) returns (ListBakePlansResponse);
+  rpc GetAvailableProducts(GetAvailableProductsRequest) returns (ListBakePlansResponse);
+  rpc CreateOrder(CreateOrderRequest) returns (OrderResponse);
+  rpc CancelOrder(CancelOrderRequest) returns (StatusResponse);
+  rpc GetOrderById(GetOrderByIDRequest) returns (OrderResponse);
+  rpc ListClientOrders(ListClientOrdersRequest) returns (ListOrdersResponse);
+  rpc ListAdminOrders(ListAdminOrdersRequest) returns (ListOrdersResponse);
+  rpc CreateDelivery(CreateDeliveryRequest) returns (StatusResponse);
+  rpc GetDeliveryById(GetDeliveryByIDRequest) returns (StatusResponse);
+  rpc ListDeliveries(ListDeliveriesRequest) returns (StatusResponse);
+  rpc CreateReturnReport(CreateReturnReportRequest) returns (StatusResponse);
+  rpc UpdateReturnReport(UpdateReturnReportRequest) returns (StatusResponse);
+  rpc ListReturnReports(ListReturnReportsRequest) returns (StatusResponse);
+  rpc CalculateRevenue(CalculateRevenueRequest) returns (CalculateRevenueResponse);
+}
+
+message Product { string id = 1; string name = 2; double price = 3; string created_at = 4; }
+message BakePlan { string id = 1; string product_id = 2; string product_name = 3; string plan_date = 4; int32 planned_quantity = 5; int32 available_quantity = 6; }
+message OrderItem { string id = 1; string order_id = 2; string bake_plan_id = 3; string product_id = 4; int32 quantity = 5; double unit_price = 6; }
+message Order { string id = 1; string client_id = 2; string store_name = 3; string status = 4; repeated OrderItem items = 5; string created_at = 6; }
+message CreateProductRequest { string name = 1; double price = 2; }
+message UpdateProductRequest { string id = 1; string name = 2; double price = 3; }
+message DeleteProductRequest { string id = 1; }
+message GetProductByIDRequest { string id = 1; }
+message ListProductsRequest {}
+message ProductResponse { Product product = 1; }
+message ListProductsResponse { repeated Product products = 1; }
+message CreateBakePlanRequest { string product_id = 1; string plan_date = 2; int32 planned_quantity = 3; }
+message UpdateBakePlanRequest { string id = 1; string product_id = 2; string plan_date = 3; int32 planned_quantity = 4; }
+message DeleteBakePlanRequest { string id = 1; }
+message ListBakePlansByDateRequest { string date = 1; }
+message GetAvailableProductsRequest { string date = 1; }
+message BakePlanResponse { BakePlan bake_plan = 1; }
+message ListBakePlansResponse { repeated BakePlan bake_plans = 1; }
+message CreateOrderRequest { string client_id = 1; string store_name = 2; string bake_plan_id = 3; int32 quantity = 4; }
+message CancelOrderRequest { string id = 1; }
+message GetOrderByIDRequest { string id = 1; }
+message ListClientOrdersRequest { string client_id = 1; }
+message ListAdminOrdersRequest {}
+message OrderResponse { Order order = 1; }
+message ListOrdersResponse { repeated Order orders = 1; }
+message CreateDeliveryRequest { string order_id = 1; string status = 2; }
+message GetDeliveryByIDRequest { string id = 1; }
+message ListDeliveriesRequest {}
+message CreateReturnReportRequest { string delivery_id = 1; int32 sold = 2; int32 returned = 3; int32 replaced = 4; }
+message UpdateReturnReportRequest { string id = 1; int32 sold = 2; int32 returned = 3; int32 replaced = 4; }
+message ListReturnReportsRequest {}
+message CalculateRevenueRequest { int32 sold_quantity = 1; double product_price = 2; }
+message CalculateRevenueResponse { double revenue = 1; }
+message StatusResponse { bool success = 1; string message = 2; }

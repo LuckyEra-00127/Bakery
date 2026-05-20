@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package bakery.management;
+
+option go_package = "github.com/bakeplan/bakeplan-go/gen/managementpb";
+
+service BakeryManagementService {
+  rpc CreateIngredient(CreateIngredientRequest) returns (IngredientResponse);
+  rpc UpdateIngredient(UpdateIngredientRequest) returns (IngredientResponse);
+  rpc DeleteIngredient(DeleteIngredientRequest) returns (StatusResponse);
+  rpc ListIngredients(ListIngredientsRequest) returns (ListIngredientsResponse);
+  rpc CreateRecipe(CreateRecipeRequest) returns (StatusResponse);
+  rpc UpdateRecipe(UpdateRecipeRequest) returns (StatusResponse);
+  rpc DeleteRecipe(DeleteRecipeRequest) returns (StatusResponse);
+  rpc GetRecipeByProductId(GetRecipeByProductIDRequest) returns (StatusResponse);
+  rpc AddIngredientToRecipe(AddIngredientToRecipeRequest) returns (StatusResponse);
+  rpc RemoveIngredientFromRecipe(RemoveIngredientFromRecipeRequest) returns (StatusResponse);
+  rpc CalculateRecipe(CalculateRecipeRequest) returns (StatusResponse);
+  rpc CalculateRecipeCost(CalculateRecipeCostRequest) returns (StatusResponse);
+  rpc CreateTask(CreateTaskRequest) returns (TaskResponse);
+  rpc UpdateTask(UpdateTaskRequest) returns (TaskResponse);
+  rpc DeleteTask(DeleteTaskRequest) returns (StatusResponse);
+  rpc ListTasks(ListTasksRequest) returns (ListTasksResponse);
+  rpc CompleteTask(CompleteTaskRequest) returns (TaskResponse);
+  rpc GetDailyStatistics(GetDailyStatisticsRequest) returns (DailyStatisticsResponse);
+  rpc GetWeeklyStatistics(GetWeeklyStatisticsRequest) returns (DailyStatisticsResponse);
+  rpc GetMonthlyStatistics(GetMonthlyStatisticsRequest) returns (DailyStatisticsResponse);
+  rpc SendEmail(SendEmailRequest) returns (SendEmailResponse);
+  rpc ListEmailLogs(ListEmailLogsRequest) returns (StatusResponse);
+}
+
+message Ingredient { string id = 1; string name = 2; string unit = 3; double cost_per_unit = 4; }
+message Task { string id = 1; string title = 2; string status = 3; string due_date = 4; string created_at = 5; }
+message DailyStatistic { string date = 1; string product_id = 2; string product = 3; int32 baked = 4; int32 delivered = 5; int32 sold = 6; int32 returned = 7; int32 left = 8; double revenue = 9; }
+message CreateIngredientRequest { string name = 1; string unit = 2; double cost_per_unit = 3; }
+message UpdateIngredientRequest { string id = 1; string name = 2; string unit = 3; double cost_per_unit = 4; }
+message DeleteIngredientRequest { string id = 1; }
+message ListIngredientsRequest {}
+message IngredientResponse { Ingredient ingredient = 1; }
+message ListIngredientsResponse { repeated Ingredient ingredients = 1; }
+message CreateRecipeRequest { string product_id = 1; string name = 2; }
+message UpdateRecipeRequest { string id = 1; string product_id = 2; string name = 3; }
+message DeleteRecipeRequest { string id = 1; }
+message GetRecipeByProductIDRequest { string product_id = 1; }
+message AddIngredientToRecipeRequest { string recipe_id = 1; string ingredient_id = 2; double amount = 3; }
+message RemoveIngredientFromRecipeRequest { string recipe_id = 1; string ingredient_id = 2; }
+message CalculateRecipeRequest { string product_id = 1; int32 quantity = 2; }
+message CalculateRecipeCostRequest { string product_id = 1; int32 quantity = 2; }
+message CreateTaskRequest { string title = 1; string status = 2; string due_date = 3; }
+message UpdateTaskRequest { string id = 1; string title = 2; string status = 3; string due_date = 4; }
+message DeleteTaskRequest { string id = 1; }
+message ListTasksRequest {}
+message CompleteTaskRequest { string id = 1; }
+message TaskResponse { Task task = 1; }
+message ListTasksResponse { repeated Task tasks = 1; }
+message GetDailyStatisticsRequest { string date = 1; }
+message GetWeeklyStatisticsRequest { string week = 1; }
+message GetMonthlyStatisticsRequest { string month = 1; }
+message DailyStatisticsResponse { repeated DailyStatistic statistics = 1; }
+message SendEmailRequest { string to = 1; string subject = 2; string body = 3; }
+message SendEmailResponse { string id = 1; bool success = 2; string message = 3; }
+message ListEmailLogsRequest {}
+message StatusResponse { bool success = 1; string message = 2; }

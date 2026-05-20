@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package bakery.user;
+
+option go_package = "github.com/bakeplan/bakeplan-go/gen/userpb";
+
+service UserService {
+  rpc RegisterUser(RegisterUserRequest) returns (UserResponse);
+  rpc LoginUser(LoginUserRequest) returns (LoginResponse);
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (LoginResponse);
+  rpc GetUserById(GetUserByIdRequest) returns (UserResponse);
+  rpc GetUserByEmail(GetUserByEmailRequest) returns (UserResponse);
+  rpc UpdateUserProfile(UpdateUserProfileRequest) returns (UserResponse);
+  rpc ChangePassword(ChangePasswordRequest) returns (StatusResponse);
+  rpc CreateStoreProfile(CreateStoreProfileRequest) returns (StatusResponse);
+  rpc UpdateStoreProfile(UpdateStoreProfileRequest) returns (StatusResponse);
+  rpc ListClients(ListClientsRequest) returns (ListClientsResponse);
+  rpc AssignRole(AssignRoleRequest) returns (StatusResponse);
+  rpc DeleteUser(DeleteUserRequest) returns (StatusResponse);
+}
+
+message User {
+  string id = 1;
+  string email = 2;
+  string full_name = 3;
+  string role = 4;
+  string created_at = 5;
+}
+
+message RegisterUserRequest { string email = 1; string password = 2; string full_name = 3; string role = 4; }
+message LoginUserRequest { string email = 1; string password = 2; }
+message ValidateTokenRequest { string token = 1; }
+message RefreshTokenRequest { string refresh_token = 1; }
+message GetUserByIdRequest { string id = 1; }
+message GetUserByEmailRequest { string email = 1; }
+message UpdateUserProfileRequest { string id = 1; string full_name = 2; }
+message ChangePasswordRequest { string id = 1; string old_password = 2; string new_password = 3; }
+message CreateStoreProfileRequest { string user_id = 1; string store_name = 2; string address = 3; string phone = 4; }
+message UpdateStoreProfileRequest { string user_id = 1; string store_name = 2; string address = 3; string phone = 4; }
+message ListClientsRequest {}
+message AssignRoleRequest { string user_id = 1; string role = 2; }
+message DeleteUserRequest { string id = 1; }
+message UserResponse { User user = 1; string token = 2; string message = 3; }
+message LoginResponse { User user = 1; string access_token = 2; string refresh_token = 3; }
+message ValidateTokenResponse { bool valid = 1; User user = 2; string error = 3; }
+message ListClientsResponse { repeated User clients = 1; }
+message StatusResponse { bool success = 1; string message = 2; }

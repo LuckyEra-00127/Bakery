@@ -1,0 +1,9 @@
+go 1.23
+
+use (
+    ./shared
+    ./api-gateway
+    ./user-service
+    ./bakery-sales-service
+    ./bakery-management-service
+)

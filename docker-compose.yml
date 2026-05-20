@@ -1,0 +1,176 @@
+services:
+  nats:
+    image: nats:2.10-alpine
+    ports:
+      - "4222:4222"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  user-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: user_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - user_db_data:/var/lib/postgresql/data
+      - ./user-service/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  sales-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sales_db
+      POSTGRES_USER: sales
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5434:5432"
+    volumes:
+      - sales_db_data:/var/lib/postgresql/data
+      - ./bakery-sales-service/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sales -d sales_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  management-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: management_db
+      POSTGRES_USER: management
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5435:5432"
+    volumes:
+      - management_db_data:/var/lib/postgresql/data
+      - ./bakery-management-service/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U management -d management_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    environment:
+      USER_GRPC_PORT: 50051
+      USER_DB_DSN: postgres://user:password@user-db:5432/user_db?sslmode=disable
+      JWT_SECRET: change-me-super-secret
+    ports:
+      - "50051:50051"
+    depends_on:
+      user-db:
+        condition: service_healthy
+
+  bakery-sales-service:
+    build:
+      context: .
+      dockerfile: bakery-sales-service/Dockerfile
+    environment:
+      SALES_GRPC_PORT: 50052
+      SALES_DB_DSN: postgres://sales:password@sales-db:5432/sales_db?sslmode=disable
+      NATS_URL: nats://nats:4222
+    ports:
+      - "50052:50052"
+    depends_on:
+      sales-db:
+        condition: service_healthy
+      nats:
+        condition: service_started
+
+  bakery-management-service:
+    build:
+      context: .
+      dockerfile: bakery-management-service/Dockerfile
+    environment:
+      MANAGEMENT_GRPC_PORT: 50053
+      MANAGEMENT_DB_DSN: postgres://management:password@management-db:5432/management_db?sslmode=disable
+      NATS_URL: nats://nats:4222
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-no-reply@bakeplan.local}
+    ports:
+      - "50053:50053"
+    depends_on:
+      management-db:
+        condition: service_healthy
+      nats:
+        condition: service_started
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    environment:
+      HTTP_PORT: 8080
+      USER_SERVICE_ADDR: user-service:50051
+      SALES_SERVICE_ADDR: bakery-sales-service:50052
+      MANAGEMENT_SERVICE_ADDR: bakery-management-service:50053
+      REDIS_ADDR: redis:6379
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - bakery-sales-service
+      - bakery-management-service
+      - redis
+
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:8080
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      - api-gateway
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+volumes:
+  user_db_data:
+  sales_db_data:
+  management_db_data:
+  prometheus_data:
+  grafana_data:
