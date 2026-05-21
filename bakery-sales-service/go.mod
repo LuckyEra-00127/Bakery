@@ -1,4 +1,4 @@
-module github.com/bakeplan/bakeplan-go/bakery-management-service
+module github.com/bakeplan/bakeplan-go/bakery-sales-service
 
 go 1.23
 
